@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" type="text/css" href="style.css" />
+        <title>Alchemy</title>
+
+        <script id="vkplay-script"></script>
+        <script>
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            document.getElementById('vkplay-script').src = `//vkplay.ru/app/${urlParams.get('appid')}/static/mailru.core.js`;
+        </script>
+        <script src="anime.min.js"></script>
+    </head>
+    <body>
+        <div align="center" style="height: 100%; background: #231F20;">
+            <div id="unity-container" class="unity-desktop">
+                <div id="overlay" style="position: absolute; inset: 0; opacity: 1; transition: opacity ease 1s; pointer-events: none">
+                    <div id="animation">
+                        <div id="cauldron"></div>
+                        <div id="elements">
+                            <div id="element-1" class="element"></div>
+                            <div id="element-2" class="element"></div>
+                            <div id="element-3" class="element"></div>
+                            <div id="element-4" class="element"></div>
+                        </div>
+                    </div>
+
+                    <div id="progress-bar" style="position: absolute; left: 0%; right: 100%; top: 49%; bottom: 49%; background-color: white"></div>
+                </div>
+
+                <canvas id="unity-canvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Unity Build -->
+        <script src="Build/VKPlay.loader.js"></script>
+        <script>
+            const settings = {
+                dataUrl: "Build/a3fe0dfde49ab5803a3b0c4a564e3dbe.data.br",
+                frameworkUrl: "Build/19bdb4b2d7ae5bc716d6efbb3874be23.js.br",
+                codeUrl: "Build/97b5389a93854456effb8099afe082cf.wasm.br",
+                streamingAssetsUrl: "StreamingAssets",
+                companyName: "DefaultCompany",
+                productName: "Alchemy",
+                productVersion: "1.0",
+                matchWebGLToCanvasSize: true,
+            };
+
+            window.devicePixelRatio = 1.0;
+
+            const progressBar = document.querySelector("#progress-bar");
+            const overlay = document.querySelector("#overlay");
+            const container = document.querySelector("#unity-container");
+
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                container.className = "unity-mobile";
+                window.devicePixelRatio = 2.0;
+            }
+
+            const animation1 = anime({
+              targets: '#elements',
+              rotateZ: [
+                { value: 0, easing: 'linear', duration: 0 },
+                { value: 360, easing: 'linear', duration: 750 },
+              ],
+              scale: [{ value: 0, easing: 'linear', duration: 750 }],
+              opacity: [{ value: 0, easing: 'linear', duration: 750 }],
+              autoplay: false
+            });
+            const animation2 = anime({
+              targets: '.element',
+              rotateZ: [
+                { value: 0, easing: 'linear', duration: 0 },
+                {
+                  value: function () {
+                    return anime.random(-360, 360);
+                  },
+                  easing: 'linear',
+                  duration: 750,
+                },
+              ],
+              translateX: [{ value: '-50%', easing: 'linear', duration: 0 }],
+              translateY: [{ value: '-50%', easing: 'linear', duration: 0 }],
+              left: [{ value: 0, easing: 'linear', duration: 750 }],
+              top: [{ value: 0, easing: 'linear', duration: 750 }],
+              delay: anime.stagger(100),
+              autoplay: false
+            });
+
+            function lerp(a, b, t) {
+              return (1 - t) * a + t * b;
+            }
+
+            let previousTimestamp = performance.now(), t = 0, target = 0;
+            function update(timestamp) {
+              const elapsed = timestamp - previousTimestamp;
+
+              t = lerp(t, target, elapsed / 500);
+              animation1.seek(animation1.duration * t);
+              animation2.seek(animation2.duration * t);
+
+              if (t >= 0.999 || (t < 0.5 && target == 1))
+              {
+                overlay.style.opacity = "0";
+                setTimeout(function () {
+                  overlay.remove();
+                }, 1000);
+
+                return;
+              }
+
+              previousTimestamp = timestamp;
+              window.requestAnimationFrame(update);
+            }
+            window.requestAnimationFrame(update);
+
+            setTimeout(() => {
+                createUnityInstance(document.querySelector("#unity-canvas"), settings, (progress) => {
+                    target = progress;
+                }).then((unityInstance) => {
+                    window.unityInstance = unityInstance;
+                    target = 1;
+                }).catch((message) => {
+                    alert(message);
+                });
+            }, 500); // Wait half a second before loading. Makes page more responsive on reload.
+        </script>
+    </body>
+</html>
