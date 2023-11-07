@@ -7,12 +7,12 @@
         <link rel="stylesheet" type="text/css" href="style.css" />
         <title>Alchemy</title>
 
-        <script id="vkplay-script"></script>
-        <script>
-            const queryString = window.location.search;
-            const urlParams = new URLSearchParams(queryString);
-            document.getElementById('vkplay-script').src = `//vkplay.ru/app/${urlParams.get('appid')}/static/mailru.core.js`;
+        <script type="text/javascript">
+            window.yandexMetricaCounterId = parseInt(92666197);
         </script>
+
+        <script src="https://crazyman-ik.github.io/web-sdk/index.js"></script>
+
         <script src="anime.min.js"></script>
     </head>
     <body>
@@ -40,9 +40,9 @@
         <script src="Build/VKPlay.loader.js"></script>
         <script>
             const settings = {
-                dataUrl: "Build/a4d056fcd38a8bc6010843e6061eb571.data.unityweb",
-                frameworkUrl: "Build/19bdb4b2d7ae5bc716d6efbb3874be23.js.unityweb",
-                codeUrl: "Build/97b5389a93854456effb8099afe082cf.wasm.unityweb",
+                dataUrl: "Build/6ed32cb87d10512cdf5436fd260b46f4.data.unityweb",
+                frameworkUrl: "Build/14164f84840a8a38c9f642d996565142.js.unityweb",
+                codeUrl: "Build/88bc371471bd1298513e3d24e2a30c8d.wasm.unityweb",
                 streamingAssetsUrl: "StreamingAssets",
                 companyName: "DefaultCompany",
                 productName: "Alchemy",
@@ -118,16 +118,33 @@
             }
             window.requestAnimationFrame(update);
 
+            const unityStartLoadingTime = performance.now();
+            let unityEndLoadingTime = 0;
             setTimeout(() => {
                 createUnityInstance(document.querySelector("#unity-canvas"), settings, (progress) => {
                     target = progress;
                 }).then((unityInstance) => {
                     window.unityInstance = unityInstance;
                     target = 1;
+
+                    unityEndLoadingTime = performance.now();
+                    unityInstance.Module.errorHandler = (errorMessage) => {
+                        const unityCrashTime = performance.now();
+                        const unityCrashPlaytime = unityEndLoadingTime === 0 ? 0 : (unityCrashTime - unityEndLoadingTime) / 1000;
+                        window.SDK.waitInitialization().then(() => {
+                            window.SDK.sendAnalyticsEvent('unityGameCrash', { unityCrashPlaytime: unityCrashPlaytime });
+                        }
+                    };
+                    window.SDK.waitInitialization().then(() => {
+                        window.SDK.sendAnalyticsEvent('unityStart', { unityLoadTime: (unityEndLoadingTime - unityStartLoadingTime) / 1000 });
+                    }
                 }).catch((message) => {
+                    window.SDK.waitInitialization().then(() => {
+                        window.SDK.sendAnalyticsEvent('unityLoadingCrash');
+                    });
                     alert(message);
                 });
-            }, 500); // Wait half a second before loading. Makes page more responsive on reload.
+            }, 500);
         </script>
     </body>
 </html>
