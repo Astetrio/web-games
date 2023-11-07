@@ -133,11 +133,11 @@
                         const unityCrashPlaytime = unityEndLoadingTime === 0 ? 0 : (unityCrashTime - unityEndLoadingTime) / 1000;
                         window.SDK.waitInitialization().then(() => {
                             window.SDK.sendAnalyticsEvent('unityGameCrash', { unityCrashPlaytime: unityCrashPlaytime });
-                        }
+                        });
                     };
                     window.SDK.waitInitialization().then(() => {
                         window.SDK.sendAnalyticsEvent('unityStart', { unityLoadTime: (unityEndLoadingTime - unityStartLoadingTime) / 1000 });
-                    }
+                    });
                 }).catch((message) => {
                     window.SDK.waitInitialization().then(() => {
                         window.SDK.sendAnalyticsEvent('unityLoadingCrash');
